@@ -1,0 +1,49 @@
+<resources>
+
+<string-array name="debugOptions">
+    <item>All</item>
+    <item>Text file</item>
+    <item>PCM</item>
+    <item>None</item>
+</string-array>
+
+<string-array name="debugValues">
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+    <item>4</item>
+</string-array>
+
+<string-array name="debugTextOptions">
+    <item>inputBuffer</item>
+    <item>outputBuffer</item>
+   <!--   
+          <item>FFT Power</item>
+   	      <item>FFT Real</item> 
+   	      <item>FFT Imaginary</item> 
+   	      <item>Mel Coeffs</item> 
+   -->
+</string-array>
+
+<string-array name="debugTextValues">
+    <item>0</item>
+    <item>1</item>
+   <!--   
+          <item>2</item>
+   	      <item>3</item> 
+   	      <item>4</item> 
+   	      <item>5</item> 
+   -->
+</string-array>
+
+<string-array name="outputOptions">
+    <item>Original</item>
+    <item>Filtered</item>
+</string-array>
+
+<string-array name="outputValues">
+    <item>1</item>
+    <item>2</item>
+</string-array>
+
+</resources>

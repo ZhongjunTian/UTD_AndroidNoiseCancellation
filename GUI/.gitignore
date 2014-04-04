@@ -1,0 +1,9 @@
+/gen
+/bin
+/obj
+/assets
+/libs
+/.settings
+.classpath
+.cproject
+.project
