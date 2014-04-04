@@ -2,7 +2,7 @@
 
 void MFCC(Variables* P)
 {
-
+	int a;
 }
 
 //*********part 1 FFT
