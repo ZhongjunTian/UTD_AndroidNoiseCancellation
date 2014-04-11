@@ -1,8 +1,9 @@
 #ifndef TRANSFORMS_H
 #define TRANSFORMS_H
 
-#include "SpeechProcessing.h"
-
+#include "Structure.h"
+#include <stdio.h>
+#define M_PI 3.14159265358979323846
 Transform* newTransform(int points);
 void transformMagnitude(Transform* transform, float* output);
 void destroyTransform(Transform** transform);

@@ -16,7 +16,7 @@ void buble_Sort(float* a,int length)
 {
 	int i,j;
 	float k;
-	for(j=0;j<length-1;j++)
+/*	for(j=0;j<length;j++)
 	{
 		for(i=0;i<j;i++)
 		{
@@ -27,6 +27,16 @@ void buble_Sort(float* a,int length)
 				a[i+1]=k;
 			}
 		}
+	}
+	*/
+	for (i = 0; i < length; i++) {
+	        for (j = length - 1; j > i; j--) {
+	            if (a[j] < a[j-1]) {
+	                k = a[j-1];
+	                a[j-1] =  a[j];
+	                a[j] = k;
+	            }
+	        }
 	}
 }
 
@@ -120,24 +130,24 @@ int VAD(float* x, Variables* P)
 	for(i=0; i< (length) ;i++){
 		sum+=x[i]*x[i];
 	}
-	P->Debug[0]=sum;
-	P->Debug[1]=suml;
-	P->Debug[2]=sumh;
+	//P->Debug[0]=sum;
+	//P->Debug[1]=suml;
+	//P->Debug[2]=sumh;
 
 	float D=fabsf(suml-sumh)/(length/2);
-	P->Debug[3]=D;
+	//P->Debug[3]=D;
 	float Px=sum;
 	float Dw=D*(0.5+(16/log10f(2.0f))*log10f(1.0f+2*sum));
-	P->Debug[4]=Dw;
+	//P->Debug[4]=Dw;
 	float temp=(float)(expf(-2*Dw));
-	P->Debug[5]=temp;
+	//P->Debug[5]=temp;
 	float Dc = (1-temp)/(1+temp);
-	P->Debug[6]=Dc;
+	//P->Debug[6]=Dc;
 	P->Ds=Dc+P->Ds*0.65;
 	//// shift Ds Buffer ////
 	float* Dsbuf=P->Dsbuf;
 	int Dslength=P->Dslength;
-	float* Dsbuf_temp=Dsbuf++;
+	float* Dsbuf_temp=Dsbuf++;//Dsbuf_temp+1 = Dsbuf
 	for(i=0;i<Dslength-1;i++){
 		*Dsbuf_temp=*Dsbuf;
 		Dsbuf_temp++;
@@ -154,13 +164,14 @@ int VAD(float* x, Variables* P)
 	buble_Sort(Dsbufsort,Dslength);
 
 	//// VAD ////
-	i=5;
-	while(((Dsbufsort[i]-Dsbufsort[i-4])<0.001) && (i<Dslength))
+	i=4;
+	while(((Dsbufsort[i]-Dsbufsort[i-4])<0.001) && (i<Dslength-1))
 		i++;
-	P->Debug[7]=(float)i;
+	//P->Debug[7]=(float)i;
 	float Tqb=Dsbufsort[i];
-	P->Debug[8]=Tqb;
-	P->Tqb = 0.975*P->Tqb + 0.025*Tqb;
+
+	//P->Debug[8]=Tqb;
+	P->Tqb = 0.975*P->Tqb + 0.025*(double)Tqb;
 	int VADDec;
     if( P->Ds > P->Tqb ){
         P->NoVoiceCount = 0;
@@ -173,10 +184,14 @@ int VAD(float* x, Variables* P)
         else{
             VADDec = 1;
             P->NoVoiceCount += 1;
-            if(P->NoVoiceCount>25)
+            //P->Debug[1]=(int)(Dslength/5);
+            if(P->NoVoiceCount>(int)(Dslength/5))
                 P->VADflag = 1;
 			}
-	P->Debug[9]=VADDec;
+	//P->Debug[9]=VADDec;
+    //if (100<P->Debug[0] && P->Debug[0]<250){
+    //	__android_log_print(ANDROID_LOG_ERROR, "debug", "No.%3.0f  Ds %f, P->Tqb %f, Tqb %f,i=%u ,Dslength %f",P->Debug[0], P->Ds , P->Tqb, Tqb,i,P->Debug[1]);
+    //}
 	free(Dsbufsort);
     return(VADDec);
 }

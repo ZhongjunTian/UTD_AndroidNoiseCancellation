@@ -34,22 +34,20 @@ compute(JNIEnv *env, jobject thiz,  jlong memoryPointer, jshortArray input)
 	//to the output array for the processing function and scale it by 1/2.
 	//For switching between suppressed and original output a GUI option
 	//can be used to select the output channel.
+	inParam->Debug[0]++;
 
 	int VADDec=VAD(inputBuffer+overlap,inParam);
-	/*
-	 for(i=0;i<inParam->windowSize;i++){
-		inParam->transform->real[i]=inputBuffer[i];
-	}
-	for(i=inParam->windowSize;i<inParam->transform->points;i++){
-		inParam->transform->real[i]=0;
-	}
-	FFT(inParam->transform);
-*/
+
+	MFCC(inParam);//result is in the P->mfcc
 	for(i=0;i<stepsize;i++)
 	{
-		inParam->outputBuffer[i] = VADDec;//inParam->inputBuffer[overlap+i]*0.5f;
+		inParam->outputBuffer[i] = 0;//inParam->inputBuffer[overlap+i]*0.5f;//
 	}
-
+	for(i=0;i<13;i++)
+	{
+		__android_log_print(ANDROID_LOG_ERROR, "counter", "%f",	 inParam->mfcc[i]);
+	}
+	//
 	stop(inParam->timer);
 }
 
@@ -62,16 +60,24 @@ initialize(JNIEnv* env, jobject thiz, jint freq, jint stepsize, jint windowsize)
 	inParam->stepSize = stepsize;
 	inParam->windowSize = windowsize;
 	inParam->overlap = windowsize-stepsize;
+
 	inParam->Ds = 0;
 	inParam->Tqb = 0;
 	inParam->NoVoiceCount =0;
 	inParam->VADflag = 0;
-	inParam->Dslength = (int)(freq/windowsize/2);
+	inParam->Dslength = (int)(freq/stepsize);////// ??/2
 	inParam->inputBuffer = (float*) calloc(inParam->windowSize,sizeof(float));
 	inParam->outputBuffer = (float*) malloc(stepsize*sizeof(float));
 	inParam->xl = (float*) calloc(windowsize/2,sizeof(float));
 	inParam->xh = (float*) calloc(windowsize/2,sizeof(float));
-	inParam->Dsbuf = (float*) calloc((int)(freq/(windowsize/2)),sizeof(float));
+	inParam->Dsbuf = (float*) calloc(inParam->Dslength,sizeof(float));
+	int point=exp2(ceil(log(inParam->windowSize)/log(2)));
+	inParam->wts = (float*) calloc((point/2 + 1)*40,sizeof(float));
+	inParam->window = (float*) calloc(inParam->windowSize,sizeof(float));
+	inParam->FFTbuffer = (float*) calloc(point,sizeof(float));
+	inParam->dctm = (float*) calloc(13*40,sizeof(float));
+	inParam->mfcc = (float*) calloc(13,sizeof(float));
+
 	int i;
 	for(i=0;i<10;i++){
 	inParam->Debug[i]=0;
@@ -90,6 +96,9 @@ initialize(JNIEnv* env, jobject thiz, jint freq, jint stepsize, jint windowsize)
 		inParam->transform->cosine[i] = cos(arg);
 		inParam->transform->sine[i] = sin(arg);
 	}
+	hanning(inParam->window,inParam->windowSize);
+	fft2melmx(inParam); //result is aspectrum[40]
+	spec2cep(inParam);//result is dctm[13*40]
 
 	return (jlong)inParam;
 }
