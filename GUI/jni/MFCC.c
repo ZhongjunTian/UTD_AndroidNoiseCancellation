@@ -5,37 +5,29 @@ void MFCC(Variables* P)
 	int i,j;
 	int point=P->transform->points;
 	int hpoint=point/2+1;
-	for(i=0;i<P->windowSize;i++){
-		*(P->transform->real + i) = *(P->inputBuffer + i)*32768.0f * (*(P->window+i));
-		*(P->transform->imaginary + i) =0;
-	}
-	for(i=P->windowSize;i<point;i++){
-		*(P->transform->real + i) = 0;
-		*(P->transform->imaginary + i) =0;
-	}
-	FFT(P->transform);
+
 	for(i=0;i<hpoint;i++){
-		*(P->transform->real + i)=*(P->transform->real + i)**(P->transform->real + i) + *(P->transform->imaginary + i)**(P->transform->imaginary + i);
+		*(P->mfcc_pspectrum + i)=*(P->transform->real + i)**(P->transform->real + i) + *(P->transform->imaginary + i)**(P->transform->imaginary + i);
 	}//result is pspectrum, store in real[0:64]
 
 	float aspectrum[40];
 	for(i=0;i<40;i++){
-		*(P->transform->imaginary + i)=0;
+		*(P->mfcc_aspectrum_40 + i)=0;
 		for(j=0;j<hpoint;j++){
 			if(*(P->wts+i*hpoint+j)!=0){
-			*(P->transform->imaginary + i) += *(P->wts+i*hpoint+j)**(P->transform->real + j);
+			*(P->mfcc_aspectrum_40 + i) += *(P->wts+i*hpoint+j)**(P->mfcc_pspectrum + j);
 			}//result is aspectrum, store in imaginary[0:39]
 		}
 	}
 
 
 	for(i=0;i<40;i++){
-		*(P->transform->imaginary + i)=log(*(P->transform->imaginary + i));
+		*(P->mfcc_aspectrum_40 + i)=log(*(P->mfcc_aspectrum_40 + i));
 	}//log(spec);
 	for(i=0;i<13;i++){
 		*(P->mfcc + i)=0;
 		for(j=0;j<40;j++){
-			*(P->mfcc + i) += *(P->dctm+40*i+j) * *(P->transform->imaginary + j);
+			*(P->mfcc + i) += *(P->dctm+40*i+j) * *(P->mfcc_aspectrum_40 + j);
 		}
 	}//cep = dctm*log(spec);
 
@@ -58,7 +50,7 @@ void filter(float* x,int length)
 	}
 }
 
-void powspec_specgram(Variables* P)
+/*void powspec_specgram(Variables* P)
 {
 	Transform* T=P->transform;
 	float* x=P->inputBuffer;
@@ -77,7 +69,7 @@ void powspec_specgram(Variables* P)
 	//结果取一半+1个数据   并且 .^2
 	//float e = sum();
 
-}
+}*/
 
 void hanning(float* window,int length)
 {
@@ -103,7 +95,7 @@ void fft2melmx(Variables* P)
 		fftfrqs[i]=(float)(i*P->frequency)/P->transform->points;//*************//
 	}
 	float min=0;
-	float max=hz2mel(4000,0);//*************//
+	float max=hz2mel(P->frequency/2,0);//*************//
 	for(i=0;i<42;i++){
 		binfrqs[i]=mel2hz((i)*(max-min)/41.0f,0);
 	}
@@ -425,3 +417,4 @@ void destroyTransform(Transform** transform)
 		*transform = NULL;
 	}
 }
+

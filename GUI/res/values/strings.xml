@@ -13,6 +13,7 @@
     <string name="prefSamplingFreq">samplingfreq</string>
     <string name="prefWindowTime">windowtime</string>
     <string name="prefStepTime">steptime</string>
+    <string name="prefDecisionBufferLength">decisionBufferLength</string>
     <string name="prefDebug">debug</string>
     <string name="prefDebugOutput">debugOptions</string>
 

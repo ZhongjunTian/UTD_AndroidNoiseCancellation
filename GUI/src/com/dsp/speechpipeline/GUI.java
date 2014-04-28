@@ -3,6 +3,7 @@ package com.dsp.speechpipeline;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -21,7 +22,6 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.view.View;
 import android.widget.TextView;
-
 
 public class GUI extends Activity implements Monitor{
 	
@@ -45,14 +45,21 @@ public class GUI extends Activity implements Monitor{
     	
     	super.onCreate(savedInstanceState);
     	
+    	//Setup Java interfaces
+    	Settings.setAssetManager(getAssets());
+    	Settings.setCallbackInterface(this);
+    	
     	//set the application layout
         setContentView(R.layout.recorder);
-        
-        Settings.setCallbackInterface(this);
         
         //hook application preferences interface
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
         
+        //setup ListPreference values
+    	Settings.debugOutputNames = getResources().getStringArray(R.array.debugTextOptions);
+    	Settings.debugLevels = getResources().getStringArray(R.array.debugOptions);
+    	Settings.audioOutputs = getResources().getStringArray(R.array.outputOptions);
+
         //hook UI elements
         setupListeners();
         
@@ -77,8 +84,8 @@ public class GUI extends Activity implements Monitor{
         processing = new AtomicBoolean();
         
         //create queues for data to be stored in during processing
-        inputFrames = new ArrayBlockingQueue<WaveFrame>(10);
-        processedFrames = new ArrayBlockingQueue<WaveFrame>(10);
+        inputFrames = new ArrayBlockingQueue<WaveFrame>(1);
+        processedFrames = new ArrayBlockingQueue<WaveFrame>(1);
         
         enableButtons(false);
     }
@@ -94,7 +101,12 @@ public class GUI extends Activity implements Monitor{
 		((Button)findViewById(R.id.buttonSettings)).setEnabled(!flag);
 		((Button)findViewById(R.id.buttonStart)).setEnabled(!flag);
 		((Button)findViewById(R.id.buttonStop)).setEnabled(flag);
-		((Button)findViewById(R.id.buttonPCM)).setEnabled(!flag);
+		
+		if(flag){
+			((Button)findViewById(R.id.buttonPCM)).setText(Settings.getOutput());
+		} else {
+			((Button)findViewById(R.id.buttonPCM)).setText(getString(R.string.file));
+		}
 	}
     
 	private View.OnClickListener buttonClick = new View.OnClickListener() {
@@ -163,8 +175,20 @@ public class GUI extends Activity implements Monitor{
 	}
 	
 	private void buttonPCM(){
-		getDirectoryContents();
-		createFilePrompt().show();
+		if(!processing.get()){
+			getDirectoryContents();
+			createFilePrompt().show();
+		} else {
+			if(Settings.output.get() == 0) {
+				Settings.setOutput(1);
+				preferences.edit().putString(getString(R.string.prefOutputStream), Settings.audioOutputs[1]).commit();
+			} else {
+				Settings.setOutput(0);
+				preferences.edit().putString(getString(R.string.prefOutputStream), Settings.audioOutputs[0]).commit();
+			}
+			((Button)findViewById(R.id.buttonPCM)).setText(Settings.getOutput());
+	        Settings.changed = false;
+		}
 	}
 	
 	private void buttonSettings(){
@@ -194,12 +218,13 @@ public class GUI extends Activity implements Monitor{
 
 	private void updateSettings(){
 		Settings.setPlayback(preferences.getBoolean(getString(R.string.prefPlayback), false));
-		Settings.setOutput(Integer.parseInt(preferences.getString(getString(R.string.prefOutputStream), "2")));
+		Settings.setOutput(Arrays.asList(Settings.audioOutputs).indexOf((preferences.getString(getString(R.string.prefOutputStream), Settings.audioOutputs[0]))));
 		Settings.setSamplingFrequency(Integer.parseInt(preferences.getString(getString(R.string.prefSamplingFreq), "8000")));
 		Settings.setWindowSize(Float.parseFloat(preferences.getString(getString(R.string.prefWindowTime), "11.0")));
 		Settings.setStepSize(Float.parseFloat(preferences.getString(getString(R.string.prefStepTime), "5.0")));
-		Settings.setDebugLevel(Integer.parseInt(preferences.getString(getString(R.string.prefDebug), "4")));
-		Settings.setDebugOutput(Integer.parseInt(preferences.getString(getString(R.string.prefDebugOutput), "0")));
+		Settings.setDecisionBufferLength(Integer.parseInt(preferences.getString(getString(R.string.prefDecisionBufferLength), "200")));
+		Settings.setDebugLevel(Arrays.asList(Settings.debugLevels).indexOf((preferences.getString(getString(R.string.prefDebug), Settings.debugLevels[0]))));
+		Settings.setDebugOutput(Arrays.asList(Settings.debugOutputNames).indexOf((preferences.getString(getString(R.string.prefDebugOutput), Settings.debugOutputNames[0]))));
 	}
 	
 	//otherwise, everything resets when the screen is changed.
@@ -253,8 +278,10 @@ public class GUI extends Activity implements Monitor{
 	}
 	
 	private void settingSummary(){
-		appendTextView("Sampling: " + Settings.Fs + "Hz | Window: " + Settings.windowTime + "ms | Step: " + Settings.stepTime + "ms");
-        appendTextView("Audio Output: " + Settings.getOutput() + " | Debug: " + Settings.getDebugLevel() + " | Text: " + Settings.getDebugOutput());
+		appendTextView("Rate: " + Settings.Fs + "Hz | Window: " + Settings.windowTime + "ms | Step: " + Settings.stepTime + "ms");
+		appendTextView("Samples - Window: " + Settings.windowSize + " | Step: " + Settings.stepSize + " | Overlap: " + (Settings.windowSize - Settings.stepSize));
+        appendTextView("Audio: " + Settings.getOutput() + " | Debug: " + Settings.getDebugLevel() + " | Text: " + Settings.getDebugOutput());
+        appendTextView("Speaker output: " + (Settings.playback?"enabled":"disabled") + " | Decision Buffer: " + Settings.decisionBufferLength + " frames" );
 	}
 	
 	public int getMode(){

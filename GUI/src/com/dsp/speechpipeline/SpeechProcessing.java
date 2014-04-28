@@ -5,7 +5,7 @@ public class SpeechProcessing {
 	long pointer;
 	
 	public SpeechProcessing(){
-		pointer = initialize(Settings.Fs, Settings.stepSize, Settings.windowSize);
+		pointer = initialize(Settings.Fs, Settings.stepSize, Settings.windowSize, Settings.decisionBufferLength);
 	}
 	
 	public void release(){
@@ -24,13 +24,17 @@ public class SpeechProcessing {
 		return getDebug(pointer, Settings.debugOutput);
 	}
 	
+	public float[] getClassification(){
+		return getDebug(pointer, 12);
+	}
+	
 	public short[] getOutput(){
-		return getOutput(pointer, Settings.output?0:1);
+		return getOutput(pointer, Settings.output.get());
 	}
 
 	//JNI Method Calls	
 	private static native void compute(long memoryPointer, short[] in);
-	private static native long initialize(int frequency, int stepSize, int windowSize);
+	private static native long initialize(int frequency, int stepSize, int windowSize, int decisionBufferLength);
 	private static native void finish(long memoryPointer);
 	private static native float getTime(long memoryPointer);
 	private static native float[] getDebug(long memoryPointer, int debugOutput);

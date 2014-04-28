@@ -3,7 +3,6 @@ package com.dsp.speechpipeline;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import android.media.AudioFormat;
@@ -16,22 +15,13 @@ public class WaveRecorder implements Runnable{
 	private BlockingQueue<WaveFrame> output;
 	private AudioRecord recorder;
 	private int recBufLen;
-	private long currentFrame, skipCount;
-	private long timeout;
 	private Thread recThread;
-	private boolean noSkips;
-	private Monitor main;
 	
 	public WaveRecorder(BlockingQueue<WaveFrame> output){
 		this.output = output;
-		main = Settings.getCallbackInterface();
 		isRecording = new AtomicBoolean();
-		currentFrame = 0;
-		skipCount = 0;
 		
-		timeout = 10 * ((Settings.stepSize*100000)/Settings.Fs);
-		
-		recBufLen = 5 * AudioRecord.getMinBufferSize(Settings.Fs, AudioFormat.CHANNEL_IN_MONO, Settings.FORMAT);
+		recBufLen = AudioRecord.getMinBufferSize(Settings.Fs, AudioFormat.CHANNEL_IN_MONO, Settings.FORMAT);
 		recorder = new AudioRecord(Settings.SOURCE, Settings.Fs, AudioFormat.CHANNEL_IN_MONO, Settings.FORMAT, recBufLen);
 		
 		recThread = new Thread(this);
@@ -64,15 +54,7 @@ public class WaveRecorder implements Runnable{
 				if(isRecording.get()) {
 					abuf_short = new short[Settings.stepSize];
 					recorder.read(abuf_short, 0, Settings.stepSize);
-					noSkips = output.offer(new WaveFrame(abuf_short), timeout, TimeUnit.MICROSECONDS);
-					currentFrame++;
-					if(!noSkips) {
-						skipCount++;
-					}
-					if((skipCount != 0) && (currentFrame % Settings.secondConstant == 0)){
-						main.notify("Frames Skipped: " + skipCount);
-						skipCount = 0;
-					}
+					output.put(new WaveFrame(abuf_short));
 				} else {
 					output.put(Settings.STOP);
 					break loop;

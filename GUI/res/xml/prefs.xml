@@ -13,10 +13,10 @@
 	<ListPreference 
      android:key="outputstream"
      android:title="Audio Output (PCM and Playback)"
-     android:summary="Default: Filtered"
-     android:defaultValue="2"
+     android:summary="Default: Original"
+     android:defaultValue="Original"
      android:entries="@array/outputOptions"
-     android:entryValues="@array/outputValues"/>
+     android:entryValues="@array/outputOptions"/>
 	
 	<ListPreference
      android:key="samplingfreq"
@@ -40,21 +40,29 @@
      android:summary="Default: 5.0ms"
      android:title="Shift Time" />
 	
+	<EditTextPreference
+     android:key="decisionBufferLength"
+     android:defaultValue="200"
+     android:gravity="left"
+     android:inputType="number"
+     android:summary="Default: 200 frames"
+     android:title="Decision Buffer Length" />
+	
 	<ListPreference 
      android:key="debug"
      android:title="Debugging Level"
      android:summary="Default: None"
-     android:defaultValue="4"
+     android:defaultValue="None"
      android:entries="@array/debugOptions"
-     android:entryValues="@array/debugValues"/>
+     android:entryValues="@array/debugOptions"/>
 	
 	<ListPreference 
      android:key="debugOptions"
      android:title="Debugging Text Selection"
      android:summary="Default: inputBuffer"
-     android:defaultValue="0"
+     android:defaultValue="inputBuffer"
      android:entries="@array/debugTextOptions"
-     android:entryValues="@array/debugTextValues"/>
+     android:entryValues="@array/debugTextOptions"/>
 	  	
  </PreferenceCategory>
 </PreferenceScreen>

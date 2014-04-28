@@ -177,18 +177,21 @@ int VAD(float* x, Variables* P)
         P->NoVoiceCount = 0;
         P->VADflag = 0;
         VADDec = 1;
+        P->VADtemp=1;
     }
-    else
+    else{
+        P->VADtemp=0;
         if(P->VADflag)
             VADDec = 0;
         else{
             VADDec = 1;
             P->NoVoiceCount += 1;
             //P->Debug[1]=(int)(Dslength/5);
-            if(P->NoVoiceCount>(int)(Dslength/5))
+            if(P->NoVoiceCount>(int)(Dslength/40))
                 P->VADflag = 1;
 			}
-	//P->Debug[9]=VADDec;
+    }
+    //P->Debug[9]=VADDec;
     //if (100<P->Debug[0] && P->Debug[0]<250){
     //	__android_log_print(ANDROID_LOG_ERROR, "debug", "No.%3.0f  Ds %f, P->Tqb %f, Tqb %f,i=%u ,Dslength %f",P->Debug[0], P->Ds , P->Tqb, Tqb,i,P->Debug[1]);
     //}

@@ -31,14 +31,18 @@ public class Processing implements Runnable{
 					break loop;
 				}
 				speechProcessor.process(currentFrame.getAudio());
-				if(Settings.playback || Settings.debugLevel == 3 || Settings.debugLevel == 1) {
+				if(Settings.playback || Settings.debugLevel > 2) {
 					currentFrame.setAudioSamples(speechProcessor.getOutput());
 				}
-				if(Settings.debugLevel<3){
+				if(Settings.debugLevel == 2 || Settings.debugLevel == 4){
 					currentFrame.setDebug(speechProcessor.getDebug());
 				}
 				if(counter == Settings.secondConstant){
-					Settings.getCallbackInterface().notify("Average Frame Time: " + speechProcessor.getTime() + " ms");
+					if(Settings.debugLevel == 1) {
+						Settings.getCallbackInterface().notify("Frame Time: " + speechProcessor.getTime() + " ms | Class: " + Settings.noiseClasses[((int)speechProcessor.getClassification()[0])+1]);
+					} else {
+						Settings.getCallbackInterface().notify("Frame Time: " + speechProcessor.getTime() + " ms");
+					}
 					counter = 0;
 				} else {
 					counter++;

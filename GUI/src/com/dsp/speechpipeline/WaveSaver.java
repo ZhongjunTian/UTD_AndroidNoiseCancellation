@@ -26,22 +26,22 @@ public class WaveSaver implements Runnable{
 		this.outputQueue = outputQueue;
 		
 		switch(Settings.debugLevel){
-			case(1): {
-						enablePCMOutput();
-			}
-			case(2): {	enableDebugOutput();
-						break;
+			case(4): {
+						enableDebugOutput();
 			}
 			case(3): {	enablePCMOutput();
 						break;
 			}
-			case(4): break;
+			case(2): {	enableDebugOutput();
+						break;
+			}
+			case(1): break;
+			case(0): break;
 			default: break;
-			
 		}
 		
 		if(Settings.playback){
-			int size = 5 * AudioTrack.getMinBufferSize(Settings.Fs, AudioFormat.CHANNEL_OUT_MONO, Settings.FORMAT);
+			int size = AudioTrack.getMinBufferSize(Settings.Fs, AudioFormat.CHANNEL_OUT_MONO, Settings.FORMAT);
 			sound = new AudioTrack(AudioManager.STREAM_MUSIC, Settings.Fs, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, size, AudioTrack.MODE_STREAM);
 		}
 		
@@ -110,7 +110,7 @@ public class WaveSaver implements Runnable{
 				
 				if(debugData){
 					try {
-						debugWriter.write((Arrays.toString(outputFrame.getDebug())+"\n").getBytes());
+						debugWriter.write((Arrays.toString(outputFrame.getDebug()).replace("[", "").replace("]","")+"\n").getBytes());
 					} catch (IOException e) {
 						e.printStackTrace();
 					}

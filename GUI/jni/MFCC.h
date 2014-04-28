@@ -8,7 +8,7 @@
 #ifndef MFCC_H_
 #define MFCC_H_
 
-#include "Structure.h"
+#include "SpeechProcessing.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +22,7 @@ void fft2melmx(Variables* P);
 void spec2cep(Variables* P);
 float hz2mel(float f,int htk);
 float mel2hz(float z,int htk);
+
 
 #define M_PI 3.14159265358979323846
 Transform* newTransform(int points);

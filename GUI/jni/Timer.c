@@ -12,26 +12,25 @@ newTimer(){
 	return newTimer;
 }
 
-void start(Timer* timer){
+void startTimer(Timer* timer){
 	clock_gettime(CLOCK_MONOTONIC, &(timer->startTime));
 }
 
-void stop(Timer* timer){
+void stopTimer(Timer* timer){
 	clock_gettime(CLOCK_MONOTONIC, &(timer->stopTime));
 	timer->totalTime += (timer->stopTime.tv_sec - timer->startTime.tv_sec)*1000000000LL + timer->stopTime.tv_nsec - timer->startTime.tv_nsec;
 	timer->totalRuns++;
 }
 
-void tellTime(Timer* timer){
+void tellTimerTime(Timer* timer){
 	__android_log_print(ANDROID_LOG_ERROR, "Timer", "Total Function Calls: %u, Total Processing Time: %llu ns, Average Per Run: %f ms",timer->totalRuns, timer->totalTime, timer->totalTime/(timer->totalRuns*1000000.0));
-
 }
 
-float getMS(Timer* timer){
+float getTimerMS(Timer* timer){
 	return timer->totalTime/(timer->totalRuns*1000000.0);
 }
 
-void destroy(Timer** timer){
+void destroyTimer(Timer** timer){
 	free(*timer);
 	*timer = NULL;
 }

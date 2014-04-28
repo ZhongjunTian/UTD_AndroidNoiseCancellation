@@ -1,5 +1,9 @@
 package com.dsp.speechpipeline;
 
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import android.content.res.AssetManager;
 import android.media.AudioFormat;
 import android.media.MediaRecorder;
 
@@ -14,11 +18,17 @@ public class Settings {
 	public static int stepSize = Math.round(stepTime*Fs*0.001f);		//step in terms of samples
 	public static int windowSize = Math.round(windowTime*Fs*0.001f);	//window in terms of samples
 	public static boolean playback = false;
-	public static boolean output = false;
+	public static AtomicInteger output = new AtomicInteger();
 	public static boolean changed = false;
-	public static int debugLevel = 4;
+	public static int debugLevel = 0;
 	public static int debugOutput = 0;
+	public static int decisionBufferLength = 200;
+	public static String[] debugOutputNames = {"Default"};
+	public static String[] debugLevels = {"Default"};
+	public static String[] audioOutputs = {"Default"};
+	public static String[] noiseClasses = {"Unavailable", "Machinery", "Babble", "Car"};
 	private static Monitor main;
+	private static AssetManager assetManager;
 	
 	// UI update interval
 	public static int secondConstant = Fs/stepSize;
@@ -35,6 +45,14 @@ public class Settings {
 		return main;
 	}
 	
+	public static AssetManager getAssetManager() {
+		return assetManager;
+	}
+
+	public static void setAssetManager(AssetManager assetManager) {
+		Settings.assetManager = assetManager;
+	}
+
 	public static boolean setStepSize(float steptime){
 		if (steptime > 0) {
 			int stepsize = Math.round(steptime*Fs*0.001f);
@@ -43,6 +61,7 @@ public class Settings {
 				stepTime = steptime;
 				secondConstant = Fs/stepsize;
 				changed = true;
+				main.notify("Step time set to " + Settings.stepTime + "ms.");
 				return true;
 			}
 		}
@@ -56,6 +75,7 @@ public class Settings {
 				windowSize = windowsize;
 				windowTime = windowtime;
 				changed = true;
+				main.notify("Window time set to " + Settings.windowTime + "ms.");
 				return true;
 			}
 		}
@@ -69,95 +89,77 @@ public class Settings {
 			windowSize = Math.round(windowTime*Fs*0.001f);
 			secondConstant = Fs/stepSize;
 			changed = true;
+			main.notify("Sampling rate set to " + Settings.Fs + "Hz.");
 			return true;
 		}
 		return false;
 	}
 	
+	public static boolean setDecisionBufferLength(int length) {
+		if(length > 0 && length != decisionBufferLength) {
+			decisionBufferLength = length;
+			changed = true;
+			main.notify("Decision buffer length set to " + decisionBufferLength + " frames.");
+			return true;
+		}
+		return false;
+	}
+
 	public static boolean setPlayback(boolean flag){
 		if(playback != flag){
 			playback = flag;
 			changed = true;
+			String[] result = {"Playback disabled.", "Playback enabled for " + getOutput().toLowerCase(Locale.US) + " output."};
+			main.notify(result[Settings.playback?1:0]);
 			return true;
 		}
 		return false;
 	}
 	
 	public static boolean setOutput(int stream){
-		if((stream == 1) && (output != true)) { 		//original signal
-			output = true;
+		if(stream < 0 || stream > audioOutputs.length) {
+			return false;
+		} else if(stream != output.getAndSet(stream)) {
 			changed = true;
-			return true;
-		} else if((stream == 2) && (output != false)) { //filtered signal
-			output = false;
-			changed = true;
+			String[] result = {"Playback set to original output.", "Playback set to filtered output."};
+			main.notify(result[output.get()]);
 			return true;
 		}
 		return false;
 	}
 	
 	public static String getOutput(){
-		if (output == true){
-			return "Original";
-		} else {
-			return "Filtered";
-		}
+		return audioOutputs[output.get()];
 	}
 	
 	public static String getDebugLevel(){
-		if(debugLevel == 4){
-			return "None";
-		} else if (debugLevel == 3){
-			return "PCM";
-		} else if(debugLevel == 2){
-			return "Text";
-		} else if(debugLevel == 1){
-			return("All");
-		}
-		return "How could you let this happen?";
+		return debugLevels[debugLevel];
 	}
 	
 	public static boolean setDebugLevel(int level){
-		if(debugLevel < 1 || debugLevel > 4 ){
+		if(level < 0 || level > debugLevels.length){
 			return false;
 		} else if (debugLevel != level){
 			debugLevel = level;
 			changed = true;
+			String[] result = {"Debug ouput disabled.", "Classification output enabled.", "Text file output enabled.", "PCM ouput enabled.", "All debug outputs enabled."};
+			main.notify(result[debugLevel]);
 			return true;
 		}
 		return false;
 	}
 	
-	//Text debugging outputs. These are defined in arrays.xml
-	//Names correspond to values in debugTextOptions. Integer
-	//assignments correspond to values in debugTextValues.
-	//The checking logic in setDebugOutput should match with 
-	//the total number of options you wish to implement.
 	public static String getDebugOutput(){
-		if (debugLevel > 2) {
-			return "None";
-		} else if(debugOutput == 0){
-			return "inputBuffer";
-		} else if (debugOutput == 1){
-			return "outputBuffer";
-		}/* else if(debugOutput == 2){
-			return "FFT Power";
-		} else if(debugOutput == 3){
-			return("FFT Real");
-		}  else if(debugOutput == 4){
-			return("FFT Imaginary");
-		} else if(debugOutput == 5){
-			return("Mel Coeffs");
-		} ... etc */
-		return "You've done it now!";
+		return debugOutputNames[debugOutput];
 	}
 	
 	public static boolean setDebugOutput(int output){
-		if(debugOutput < 0 || debugOutput > 2) {
+		if(output < 0 || output > debugOutputNames.length) {
 			return false;
 		} else if(debugOutput != output){
 			debugOutput = output;
 			changed = true;
+			main.notify(getDebugOutput() + " text output selected.");
 			return true;
 		}
 		return false;

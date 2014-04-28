@@ -1,7 +1,7 @@
 #ifndef VAD_H_
 #define VAD_H_
 
-#include "Structure.h"
+#include "Speechprocessing.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

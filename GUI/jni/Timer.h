@@ -14,11 +14,11 @@ typedef struct Timer {
 
 Timer* newTimer();
 
-void start(Timer* timer);
-void stop(Timer* timer);
-void tellTime(Timer* timer);
-float getMS(Timer* timer);
+void startTimer(Timer* timer);
+void stopTimer(Timer* timer);
+void tellTimerTime(Timer* timer);
+float getTimerMS(Timer* timer);
 
-void destroy(Timer** timer);
+void destroyTimer(Timer** timer);
 
 #endif
